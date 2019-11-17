@@ -15,7 +15,6 @@ OUT_FILE = './output.txt'
 
 # Read in the file
 def read_input(file):
-
     # reading in data
     with open(file, "r") as text_file:
         all_lines = text_file.read().splitlines()
@@ -67,9 +66,13 @@ def binary_classifier_algorithm(feature_vectors, training_labels, number_of_iter
     # initialize the weight vector + bias
     w = [0] * len(feature_vectors[0])
     b = 0
+    results = {}
 
     # start training
     for iteration in range(number_of_iterations):
+
+        correct_answers = 0
+        mistakes = 0
 
         # generate the order of training examples that we'll be iterating over
         r = list(range(len(feature_vectors)))
@@ -86,8 +89,15 @@ def binary_classifier_algorithm(feature_vectors, training_labels, number_of_iter
             if correct_answer * a <= 0:
                 w = update_weights(weight_vector=w, feature_vector=feature_vectors[i], correct_answer=correct_answer)
                 b += correct_answer
+                mistakes += 1
+            else:
+                correct_answers += 1
 
-    return w, b
+        results[iteration] = {"correct": correct_answers,
+                              "incorrect": mistakes,
+                              "accuracy": correct_answers / (correct_answers + mistakes)}
+
+    return w, b, results
 
 
 def compute_activation(weight_vector, feature_vector, bias):
@@ -110,23 +120,34 @@ def update_weights(weight_vector, feature_vector, correct_answer):
     return new_weight_vector
 
 
-def build_test_dictionary(test_lines, test_labels):
-    test_dictionary = {}
+def perceptron_tests(weight_vector, bias, test_lines, test_labels, number_of_iterations):
+    # generate the order of training examples that we'll be iterating over
+    r = list(range(len(test_lines)))
 
-    for i in range(len(test_lines)):
-        key = tuple(test_lines[i])
-        value = test_labels[i]
+    # start training
 
-        if test_dictionary.get(key):
-            print("wait")
+    correct_answers = 0
+    mistakes = 0
 
-        test_dictionary[key] = value
+    for i in r:
+        # compute the activation
+        a = compute_activation(weight_vector=weight_vector, feature_vector=test_lines[i], bias=bias)
 
-    return test_dictionary
+        if a <= 0:
+            a = 0
+        else:
+            a = 1
 
+        correct_answer = int(test_labels[i])
 
-def perceptron_tests(weight_vector, bias, test_dictionary):
-    pass
+        if a == correct_answer:
+            correct_answers += 1
+        else:
+            mistakes += 1
+
+    return {"correct": correct_answers,
+            "incorrect": mistakes,
+            "accuracy": correct_answers / (correct_answers + mistakes)}
 
 
 def main():
@@ -159,18 +180,13 @@ def main():
                                                       stop_list=stop_list)
     print("Done")
 
-    # Train with provided examples
-    print("Training..")
-    weight_vector, bias = binary_classifier_algorithm(training_feature_vectors, training_labels, 20)
-    print("Done")
-
     # Read in test data
     print("Reading test data")
     test_lines = read_input(TEST_DATA)
     print("Done")
 
-    # Read in the training labels
-    print("Reading training labels")
+    # Read in the test labels
+    print("Reading test labels")
     test_labels = read_input(TEST_LABELS)
     print("Done")
 
@@ -179,14 +195,15 @@ def main():
     test_feature_vectors = create_feature_vectors(training_lines=test_lines, vocabulary=vocabulary, stop_list=stop_list)
     print("Done")
 
-    # Build line:answer dictionary
-    print("Creating test dictionary")
-    test_dictionary = build_test_dictionary(test_feature_vectors, test_labels)
+    # Train with provided examples
+    print("Training..")
+    weight_vector, bias, training_results = binary_classifier_algorithm(training_feature_vectors, training_labels, 20)
     print("Done")
 
     # Run perceptron tests
     print("Running perceptron tests")
-    perceptron_tests(weight_vector=weight_vector, bias=bias, test_dictionary=test_dictionary)
+    perceptron_test_results = perceptron_tests(weight_vector=weight_vector, bias=bias, test_lines=test_feature_vectors,
+                                               test_labels=test_labels, number_of_iterations=20)
     print("done")
 
 
