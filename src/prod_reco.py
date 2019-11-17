@@ -4,11 +4,11 @@
 
 from random import shuffle
 
-STOP_LIST = '../data/fortune-cookie-data/stoplist.txt'
-TRAIN_DATA = '../data/fortune-cookie-data/traindata.txt'
-TRAIN_LABELS = '../data/fortune-cookie-data/trainlabels.txt'
-TEST_DATA = '../data/fortune-cookie-data/testdata.txt'
-TEST_LABELS = '../data/fortune-cookie-data/testlabels.txt'
+STOP_LIST = './data/fortune-cookie-data/stoplist.txt'
+TRAIN_DATA = './data/fortune-cookie-data/traindata.txt'
+TRAIN_LABELS = './data/fortune-cookie-data/trainlabels.txt'
+TEST_DATA = './data/fortune-cookie-data/testdata.txt'
+TEST_LABELS = './data/fortune-cookie-data/testlabels.txt'
 
 OUT_FILE = './output.txt'
 
@@ -23,9 +23,18 @@ def read_input(file):
 
 
 # file dumping
-def dump_output(user_recommendations):
+def dump_output(training_results, test_results):
+    # First block of required output
     with open(OUT_FILE, "w") as text_file:
-        pass
+        test_accuracy = test_results["accuracy"]
+
+        for iteration, data in training_results.items():
+            text_file.write(f"Iteration{iteration + 1} {data['incorrect']}\n")
+
+        text_file.write("\n")
+
+        for iteration, data in training_results.items():
+            text_file.write(f"Iteration{iteration + 1} {data['accuracy']} {test_accuracy}\n")
 
     return
 
@@ -205,6 +214,9 @@ def main():
     perceptron_test_results = perceptron_tests(weight_vector=weight_vector, bias=bias, test_lines=test_feature_vectors,
                                                test_labels=test_labels, number_of_iterations=20)
     print("done")
+
+    dump_output(training_results, perceptron_test_results)
+    print(f"Results data written! Please see {OUT_FILE} for results.")
 
 
 if __name__ == '__main__':
